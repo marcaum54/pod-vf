@@ -5,16 +5,16 @@
         $str = trim(file_get_contents($_FILES['arquivo']['tmp_name']));
         $array = str_getcsv($str);
 
-        $tipo = $array[0];
-        $quantidade = $array[1];
-        $elementos = array_slice($array, 2, $quantidade);
+        $type = $array[0];
+        $qty = $array[1];
+        $elements = array_slice($array, 2, $qty);
 
-        return compact('tipo', 'quantidade', 'elementos');
+        return compact('type', 'qty', 'elements');
     }
 
     function csv_is_valid($csv)
     {
-        $tipos_aceitos = [
+        $typeAllowed = [
             'rubro-negro',
             'rubro negro',
             'rubro-negra',
@@ -24,8 +24,8 @@
             'avl'
         ];
 
-        if( ! in_array( strtolower($csv['tipo']), $tipos_aceitos ) )
-            throw new \Exception('O tipo informado não é aceito, segue lista: <b>'. implode(', ', $tipos_aceitos) .'</b>.');
+        if( ! in_array( strtolower($csv['type']), $typeAllowed ) )
+            throw new \Exception('O tipo informado não é aceito, segue lista: <b>'. implode(', ', $typeAllowed) .'</b>.');
     }
 
     set_exception_handler(function($e)

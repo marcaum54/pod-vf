@@ -10,6 +10,6 @@
             $csv = decode_csv_file();
 
             csv_is_valid( $csv );
-            
+
         }
     }
