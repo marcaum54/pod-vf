@@ -1,4 +1,8 @@
 <?php
+    set_exception_handler(function($e)
+    {
+        include_once 'error.php';
+    });
 
     function decode_csv_file()
     {
@@ -19,8 +23,10 @@
             'rubro negro',
             'rubro-negra',
             'rubro negra',
+            'rb',
             'binaria',
             'binario',
+            'binary',
             'avl'
         ];
 
@@ -28,7 +34,27 @@
             throw new \Exception('O tipo informado não é aceito, segue lista: <b>'. implode(', ', $typeAllowed) .'</b>.');
     }
 
-    set_exception_handler(function($e)
+    function treeFactory($type)
     {
-        include_once 'error.php';
-    });
+        switch( strtolower( $type ) )
+        {
+            case 'rubro-negro':
+            case 'rubro negro':
+            case 'rubro-negra':
+            case 'rubro negra':
+            case 'rb':
+                $class = 'RBTree';
+                break;
+            case 'binary':
+            case 'binario':
+            case 'binaria':
+                $class = 'BinaryTree';
+                break;
+            case 'avl':
+                $class = 'BinaryTree';
+                break;
+        }
+
+        return new $class();
+    }
+

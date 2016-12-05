@@ -42,19 +42,15 @@ class BinaryTree
     protected function insertNode($node, &$subtree)
     {
         if ($subtree === null)
-        {
             $subtree = $node;
-        }
-        else
+
+        if ($node->value > $subtree->value)
         {
-            if ($node->value > $subtree->value)
-            {
-                $this->insertNode($node, $subtree->right);
-            }
-            else if ($node->value < $subtree->value)
-            {
-                $this->insertNode($node, $subtree->left);
-            }
+            $this->insertNode($node, $subtree->right);
+        }
+        else if ($node->value < $subtree->value)
+        {
+            $this->insertNode($node, $subtree->left);
         }
     }
 }
