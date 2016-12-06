@@ -12,8 +12,9 @@
         <link rel="stylesheet" href="assets/my-project/css/main.css">
     </head>
     <body>
-        <header class="page-header">
-            <h1 class="text-center">POD - VF <small>2016.02</small></h1>
+        <header class="page-header text-center">
+            <h1>POD - VF <small>2016.02</small></h1>
+            <a href="controller.php?action=reset" class="btn btn-danger">Resetar</a>
         </header>
 
         <div class="container">

@@ -1,8 +1,9 @@
 <?php
-    set_exception_handler(function($e)
+
+    function redirect($url)
     {
-        include_once 'error.php';
-    });
+        return header('Location: '. $url);
+    }
 
     function decode_csv_file()
     {
@@ -14,6 +15,14 @@
         $elements = array_slice($array, 2, $qty);
 
         return compact('type', 'qty', 'elements');
+    }
+
+    function decode_csv_insert_file()
+    {
+        $str = trim(file_get_contents($_FILES['arquivo']['tmp_name']));
+        $elements = str_getcsv($str);
+
+        return compact('elements');
     }
 
     function csv_is_valid($csv)
@@ -56,5 +65,24 @@
         }
 
         return new $class();
+    }
+
+    function insertFactory(&$tree, $elements)
+    {
+        if( $tree instanceof BinaryTree)
+        {
+            foreach( $elements as $element )
+                $tree->insert( $element );
+        }
+
+        if( $tree instanceof AVLTree )
+        {
+
+        }
+
+        if( $tree instanceof RBTree )
+        {
+
+        }
     }
 
