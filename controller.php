@@ -42,12 +42,25 @@
 
         if( $_REQUEST['action'] === 'delete' )
         {
+            $tree = $_SESSION['csv']['tree'];
+            $elements = $_POST['elements'];
 
+            $deleted = array_diff($_SESSION['csv']['merged'], $elements);
+            $_SESSION['csv']['deleted'] = $deleted;
+
+            return redirect('finally.php');
         }
 
         if( $_REQUEST['action'] === 'download' )
         {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename='. uniqid() . '.csv');
 
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, $_SESSION['csv']['deleted']);
+
+            die;
         }
 
         if( $_REQUEST['action'] === 'reset' )

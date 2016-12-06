@@ -1,412 +1,584 @@
 <?php
 
+class RBNode
+{
+    const COLOR_BLACK = 0;
+    const COLOR_RED = 1;
+    public $color = self::COLOR_BLACK;
+
+    public $key = null;
+    public $value = null;
+    public $left = null;
+    
+    public $right = null;
+    public $parent = null;
+}
+
 class RBTree
 {
-    public $root;
-    public $nullLeaf;
-    const BLACK = 0;
-    const RED = 1;
+    protected $DEBUG = false;
+    protected $root = null;
+    protected $nil = null;
 
+    
     public function __construct()
     {
-        $this->nullLeaf = new stdClass();
-        $this->nullLeaf->size = 0;
-        $this->root =& $this->nullLeaf;
+        $this->nil = new RBNode();
+        $this->nil->left = $this->nil->right = $this->nil->parent = $this->nil;
+        $this->root = $this->nil;
     }
-
-    private function leftRotate($node)
+    
+    public function isNil( RBTree $tree, RBNode $x )
     {
-        $y =& $node->right;
-        $node->right =& $y->left;
-
-        if ($y->left !== $this->nullLeaf){
-
-            $y->left->p =& $node;
-        }
-        $y->p =& $node->p;
-        if ($node->p === $this->nullLeaf){
-
-            $this->root =& $y;
-        } else if ($node === $node->p->left){
-
-            $node->p->left =& $y;
-        } else {
-
-            $node->p->right =& $y;
-        }
-        $y->left =& $node;
-        $node->p =& $y;
-        $y->size = $node->size;
-        $node->size = $node->left->size + $node->right->size + 1;
+        return ( $tree->nil === $x );
     }
-
-    private function rightRotate($node)
+    
+    public function setDebug( $debug )
     {
-        $y =& $node->left;
-        $node->left =& $y->right;
+        if ( !is_bool( $debug ) )
+            throw new InvalidArgumentException( __METHOD__.'() debug must be a boolean' );
 
-        if ($y->right !== $this->nullLeaf){
-
-            $y->right->p =& $node;
-        }
-        $y->p =& $node->p;
-
-        if ($node->p === $this->nullLeaf){
-
-            $this->root =& $y;
-        } else if ($node === $node->p->right){
-
-            $node->p->right =& $y;
-        } else {
-
-            $node->p->left =& $y;
-        }
-        $y->right =& $node;
-        $node->p =& $y;
+        $this->DEBUG = $debug;
     }
-
-    private function newTreeNode($key)
+    
+    public function insert( RBTree $tree, RBNode $x )
     {
-        $node = new stdClass();
-        $node->key = $key;
-        $node->color = self::RED;
-        $node->p =& $this->nullLeaf;
-        $node->left =& $this->nullLeaf;
-        $node->right =& $this->nullLeaf;
-        $node->size = 1;
-        return $node;
-    }
 
-    public function inOrderWalk($node)
-    {
-        if ($node !== $this->nullLeaf) {
+        $this->binaryTreeInsert( $tree, $x );
 
-            $this->inOrderWalk($node->left);
-            echo $node->key;
-            $this->inOrderWalk($node->right);
-        }
-    }
-
-    public function searchRecursive($node, $key)
-    {
-        if ($node === $this->nullLeaf || $node->key == $key) return $node;
-
-        if ($key < $node->key) {
-
-            return $this->searchRecursive($node->left, $key);
-        } else {
-
-            return $this->searchRecursive($node->right, $key);
-        }
-    }
-
-    public function searchIterative ($node, $key)
-    {
-        while (!is_null($node) && $node->key != $key) {
-
-            $node = ($key < $node->key) ?
-                $node->left :
-                $node->right;
-        }
-        return $node;
-    }
-
-    public function minimum($node)
-    {
-        while ($node->left !== $this->nullLeaf) {
-
-            $node =& $node->left;
-        }
-        return $node;
-    }
-
-    public function maximum($node)
-    {
-        while ($node->right !== $this->nullLeaf) {
-
-            $node =& $node->right;
-        }
-        return $node;
-    }
-
-    public function insert($key)
-    {
-        $y = null;
-        $x =& $this->root;
-        $node = $this->newTreeNode($key);
-
-        while ($x !== $this->nullLeaf) {
-
-            $x->size++;
-            $y =& $x;
-            if ($node->key < $x->key) {
-
-                $x =& $x->left;
-            } else $x =& $x->right;
-        }
-
-        $node->p =& $y;
-
-        if (is_null($y)) {
-
-            $this->root =& $node;
-            $this->root->p =& $this->nullLeaf;
-
-        } elseif ($node->key < $y->key) {
-
-            $y->left =& $node;
-        } else {
-
-            $y->right =& $node;
-        }
-        $node->left =& $this->nullLeaf;
-        $node->right =& $this->nullLeaf;
-        $node->color = self::RED;
-        $this->insertFixup($node);
-    }
-
-    private function insertFixup ($node)
-    {
-        while ($node->p !== $this->nullLeaf && $node->p->color === self::RED){
-
-            if ($node->p === $node->p->p->left){
-
-                $y =& $node->p->p->right;
-                if ($y->color === self::RED){
-
-                    $node->p->color = self::BLACK;
-                    $y->color = self::BLACK;
-                    $node->p->p->color = self::RED;
-                    $node =& $node->p->p;
-                } else {
-                    if ($node === $node->p->right){
-                        $node =& $node->p;
-                        $this->leftRotate($node);
-                    }
-                    $node->p->color = self::BLACK;
-                    $node->p->p->color = self::RED;
-                    $this->rightRotate($node->p->p);
-                }
-            } else {
-
-                $y =& $node->p->p->left;
-                if ($y !== $this->nullLeaf && $y->color === self::RED){
-
-                    $node->p->color = self::BLACK;
-                    $y->color = self::BLACK;
-                    $node->p->p->color = self::RED;
-                    $node =& $node->p->p;
-                } else {
-
-                    if ($node === $node->p->left){
-
-                        $node =& $node->p;
-                        $this->rightRotate($node);
-                    }
-                    $node->p->color = self::BLACK;
-                    $node->p->p->color = self::RED;
-                    $this->leftRotate($node->p->p);
-                }
-            }
-        }
-        $this->root->color = self::BLACK;
-    }
-
-    public function successor ($node)
-    {
-        if ($node->right !== $this->nullLeaf) {
-
-            return $this->minimum($node->right);
-        }
-        $y =& $node->p;
-
-        while ($y !== $this->nullLeaf && $node === $y->right) {
-
-            $node =& $y;
-            $y =& $y->p;
-        }
-        return $y;
-    }
-
-    public function predecessor ($node)
-    {
-        if ($node->left != $this->nullLeaf) {
-
-            return $this->maximum($node->left);
-        }
-        $y =& $node->p;
-
-        while ($y !== $this->nullLeaf && $node === $y->left) {
-
-            $node =& $y;
-            $y =& $y->p;
-        }
-        return $y;
-    }
-
-    private function transPlant ($node, $y)
-    {
-        if ($node->p === $this->nullLeaf) {
-
-            $this->root =& $y;
-        } else if ($node === $node->p->left) {
-
-            $node->p->left =& $y;
-        } else {
-
-            $node->p->right =& $y;
-        }
-        $y->p =& $node->p;
-    }
-
-    public function delete ($node)
-    {
-        $y = $node;
-        $y_original_color = $y->color;
-
-        if ($node->left === $this->nullLeaf) {
-
-            $x =& $node->right;
-            $this->transPlant($node, $node->right);
-
-        } else if ($node->right === $this->nullLeaf) {
-
-            $x =& $node->left;
-            $this->transPlant($node, $node->left);
-        } else {
-
-            $y =& $this->minimum($node->right);
-
-            $y_original_color = $y->color;
-            $x = $y->right;
-
-            if ($y->p === $node) {
-
-                $x->p =& $y;
-            } else {
-
-                $this->transPlant($y, $y->right);
-                $y->right =& $node->right;
-                $y->right->p =& $y;
-            }
-            $this->transPlant($node, $y);
-            $y->left =& $node->left;
-            $y->left->p =& $y;
-            $y->color = $node->color;
-        }
-        if ($y_original_color == self::BLACK) {
-
-            $this->deleteFixup($x);
-        }
-    }
-
-    private function deleteFixup($node)
-    {
-        while ($node !== $this->root && $node->color === self::BLACK)
+        $newNode = $x;
+        $x->color = RBNode::COLOR_RED;
+        while ( $x->parent->color === RBNode::COLOR_RED )
         {
-            if ($node === $node->p->left)
+            if ( $x->parent === $x->parent->parent->left )
             {
-                $w =& $node->p->right;
-
-                if ($w->color === self::RED)
+                $y = $x->parent->parent->right;
+                if ( $y->color === RBNode::COLOR_RED )
                 {
-
-                    $w->color = self::BLACK;
-                    $node->p->color = self::RED;
-                    $this->leftRotate($node->p);
-                    $w =& $node->p->right;
-                }
-
-                if ($w->left->color === self::BLACK && $w->right->color === self::BLACK)
-                {
-                    $w->color = self::RED;
-                    $node =& $node->p;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $y->color = RBNode::COLOR_BLACK;
+                    $x->parent->parent->color = RBNode::COLOR_RED;
+                    $x = $x->parent->parent;
                 }
                 else
                 {
-                    if ($w->right->color === self::BLACK)
+                    if ( $x === $x->parent->right )
                     {
-                        $w->left->color === self::BLACK;
-                        $w->color = self::RED;
-                        $this->rightRotate($w);
-                        $w =& $node->p->right;
+                        $x = $x->parent;
+                        $this->leftRotate( $tree, $x );
                     }
-
-                    $w->color = $node->p->color;
-                    $node->p->color = self::BLACK;
-                    $w->right->color = self::BLACK;
-                    $this->leftRotate($node->p);
-
-                    $node =& $this->root;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $x->parent->parent->color = RBNode::COLOR_RED;
+                    $this->rightRotate( $tree, $x->parent->parent );
                 }
             }
             else
             {
-                $w =& $node->p->left;
-
-                if ($w->color === self::RED)
+                $y = $x->parent->parent->left;
+                if ( $y->color === RBNode::COLOR_RED )
                 {
-
-                    $w->color = self::BLACK;
-                    $node->p->color = self::RED;
-                    $this->rightRotate($node->p);
-                    $w =& $node->p->left;
-                }
-
-                if ($w->right->color === self::BLACK && $w->left->color === self::BLACK)
-                {
-
-                    $w->color = self::RED;
-                    $node =& $node->p;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $y->color = RBNode::COLOR_BLACK;
+                    $x->parent->parent->color = RBNode::COLOR_RED;
+                    $x = $x->parent->parent;
                 }
                 else
                 {
-
-                    if ($w->left->color === self::BLACK)
+                    if ( $x === $x->parent->left )
                     {
-                        $w->right->color === self::BLACK;
-                        $w->color = self::RED;
-                        $this->leftRotate($w);
-                        $w =& $node->p->left;
+                        $x = $x->parent;
+                        $this->rightRotate( $tree, $x );
                     }
-
-                    $w->color = $node->p->color;
-                    $node->p->color = self::BLACK;
-                    $w->left->color = self::BLACK;
-                    $this->rightRotate($node->p);
-                    $node =& $this->root;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $x->parent->parent->color = RBNode::COLOR_RED;
+                    $this->leftRotate( $tree, $x->parent->parent );
                 }
             }
-
-            $node->color = self::BLACK;
         }
-    }
 
-    public function orderStatisticSelect($node, $iStat)
-    {
-        $rank = $node->left->size +1;
+        $tree->root->left->color = RBNode::COLOR_BLACK;
 
-        if ($iStat === $rank)
-            return $node;
-        else if ($iStat < $rank)
-            return $this->orderStatisticSelect($node->left, $iStat);
-
-        return $this->orderStatisticSelect($node->right, $iStat - $rank);
-    }
-
-    public function orderStatisticRank($node)
-    {
-        $rank = $node->left->size +1;
-        $tmpNode = $node;
-
-        while( $tmpNode !== $this->root )
+        if ( $this->DEBUG )
         {
-            if( $tmpNode === $tmpNode->p->right)
-                $rank = $rank + $tmpNode->p->left->size+1;
-
-            $tmpNode = $tmpNode->p;
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+            assert( $tree->root->color === RBNode::COLOR_BLACK );
         }
 
-        return $rank;
+        return $newNode;
+    }
+    
+    public function treeSuccessor( RBTree $tree, RBNode $x )
+    {
+        $nil = $tree->nil;
+        $root = $tree->root;
+        if ( ( $y = $x->right ) !== $nil )
+        {
+            while ( $y->left !== $nil )
+            {
+                $y = $y->left;
+            }
+            return $y;
+        }
+        else
+        {
+            $y = $x->parent;
+            while ( $x === $y->right )
+            {
+                $x = $y;
+                $y = $y->parent;
+            }
+            if ( $y === $root )
+                return $nil;
+
+            return $y;
+        }
+    }
+    
+    public function treePredecessor( RBTree $tree, RBNode $x )
+    {
+        $nil = $tree->nil;
+        $root = $tree->root;
+        if ( ( $y = $x->left ) !== $nil )
+        {
+            while ( $y->right !== $nil )
+            {
+                $y = $y->right;
+            }
+            return $y;
+        }
+        else
+        {
+            $y = $x->parent;
+            while ( $x === $y->left )
+            {
+                if ( $y === $root )
+                    return $nil;
+
+                $x = $y;
+                $y = $y->parent;
+            }
+            return $y;
+        }
+    }
+    
+    public function inorderTreePrint( RBTree $tree, RBNode $x )
+    {
+        $nil = $tree->nil;
+        $root = $tree->root;
+
+        if ( $x !== $tree->nil )
+        {
+            $this->inorderTreePrint( $tree, $x->left );
+
+            echo "info=  key=".var_export( $x->key, true );
+
+            echo "  l->key=";
+            if ( $x->left === $nil )
+            {
+                echo "NULL";
+            }
+            else
+            {
+                echo var_export( $x->left->key, true );
+            }
+
+            echo "  r->key=";
+            if ( $x->right === $nil )
+            {
+                echo "NULL";
+            }
+            else
+            {
+                echo var_export( $x->right->key, true );
+            }
+
+            echo "  p->key=";
+            if ( $x->parent === $root )
+            {
+                echo "NULL";
+            }
+            else
+            {
+                echo var_export( $x->parent->key, true );
+            }
+
+            echo "  red=";
+            if ( $x->color === RBNode::COLOR_RED )
+            {
+                echo "1";
+            }
+            else
+            {
+                echo "0";
+            }
+
+            echo "\n";
+            $this->inorderTreePrint( $tree, $x->right );
+        }
+    }
+    
+    public function printTree( RBTree $tree )
+    {
+        $this->inorderTreePrint( $tree, $tree->root->left );
+    }
+    
+    public function findKey( RBTree $tree, $q )
+    {
+        $x = $tree->root->left;
+        $nil = $tree->nil;
+
+        if ( $x === $nil )
+            return false;
+
+        $isEqual = $this->compare( $x->key, $q );
+
+        while ( $isEqual !== 0 )
+        {
+            if ( $isEqual === 1 )
+            {
+                $x = $x->left;
+            }
+            else
+            {
+                $x = $x->right;
+            }
+
+            if ( $x === $nil )
+                return false;
+
+            $isEqual = $this->compare( $x->key, $q );
+        }
+
+        return $x;
+    }
+    
+    public function delete( RBTree $tree, RBNode $z )
+    {
+        $nil = $tree->nil;
+        $root = $tree->root;
+
+        if ( ( $z->left === $nil ) || ( $z->right === $nil ) )
+        {
+            $y = $z;
+        }
+        else
+        {
+            $y = $this->treeSuccessor( $tree, $z );
+        }
+
+        if ( $y->left === $nil )
+        {
+            $x = $y->right;
+        }
+        else
+        {
+            $x = $y->left;
+        }
+
+        if ( $root === ( $x->parent = $y->parent ) )
+        {
+            $root->left = $x;
+        }
+        else
+        {
+            if ( $y === $y->parent->left )
+            {
+                $y->parent->left = $x;
+            }
+            else
+            {
+                $y->parent->right = $x;
+            }
+        }
+
+        if ( $y !== $z )
+        {
+
+            if ( $this->DEBUG )
+            {
+                assert( $y !== $tree->nil );
+            }
+
+            if ( $y->color === RBNode::COLOR_BLACK )
+                $this->deleteFixUp( $tree, $x );
+
+            $y->left = $z->left;
+            $y->right = $z->right;
+            $y->parent = $z->parent;
+            $y->color = $z->color;
+            $z->left->parent = $z->right->parent = $y;
+
+            if ( $z === $z->parent->left )
+            {
+                $z->parent->left = $y;
+            }
+            else
+            {
+                $z->parent->right = $y;
+            }
+            $z = null;
+            unset( $z );
+        }
+        else
+        {
+            if ( $y->color === RBNode::COLOR_BLACK )
+                $this->deleteFixUp( $tree, $x );
+
+            $y = null;
+            unset( $y );
+        }
+
+        if ( $this->DEBUG )
+        {
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+        }
+    }
+    
+    public function enumerate( RBTree $tree, $low, $high )
+    {
+        $return = array();
+        $nil = $tree->nil;
+        $x = $tree->root->left;
+        $lastBest = $nil;
+        while ( $x !== $nil )
+        {
+            if ( $this->compare( $x->key, $high ) === 1 )
+            {
+                $x = $x->left;
+            }
+            else
+            {
+                $lastBest = $x;
+                $x = $x->right;
+            }
+        }
+
+        while ( ( $lastBest !== $nil ) && ( $this->compare( $low, $lastBest->key ) !== 1 ) )
+        {
+            $return[] = $lastBest;
+            $lastBest = $this->treePredecessor( $tree, $lastBest );
+        }
+
+        $return = array_reverse( $return );
+        return $return;
+    }
+    
+    protected function leftRotate( RBTree $tree, RBNode $x )
+    {
+
+        $nil = $tree->nil;
+
+        $y = $x->right;
+        $x->right = $y->left;
+
+        if ( $y->left !== $nil )
+        {
+            $y->left->parent = $x;
+        }
+
+        $y->parent = $x->parent;
+
+        if ( $x === $x->parent->left )
+        {
+            $x->parent->left = $y;
+        }
+        else
+        {
+            $x->parent->right = $y;
+        }
+
+        $y->left = $x;
+        $x->parent = $y;
+
+        if ( $this->DEBUG )
+        {
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+        }
+    }
+    
+    protected function rightRotate( RBTree $tree, RBNode $y )
+    {
+        $nil = $tree->nil;
+
+        $x = $y->left;
+        $y->left = $x->right;
+
+        if ( $x->right !== $nil )
+        {
+            $x->right->parent = $y;
+        }
+
+        $x->parent = $y->parent;
+
+        if ( $y === $y->parent->left )
+        {
+            $y->parent->left = $x;
+        }
+        else
+        {
+            $y->parent->right = $x;
+        }
+
+        $x->right = $y;
+        $y->parent = $x;
+
+        if ( $this->DEBUG )
+        {
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+        }
+    }
+    
+    protected function binaryTreeInsert( RBTree $tree, RBNode $z )
+    {
+        $nil = $tree->nil;
+        
+        $z->left = $z->right = $nil;
+
+        $y = $tree->root;
+        $x = $tree->root->left;
+
+        while ( $x !== $nil )
+        {
+            $y = $x;
+            if ( $this->compare( $x->key, $z->key ) === 1 )
+            {
+                $x = $x->left;
+            }
+            else
+            {
+                $x = $x->right;
+            }
+        }
+
+        $z->parent = $y;
+
+        if ( ( $y === $tree->root ) || ( $this->compare( $y->key, $z->key ) === 1 ) )
+        {
+            $y->left = $z;
+        }
+        else
+        {
+            $y->right = $z;
+        }
+
+        if ( $this->DEBUG )
+        {
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+        }
+    }
+    
+    protected function deleteFixUp( RBTree $tree, RBNode $x )
+    {
+        $root = $tree->root->left;
+
+        while ( ( $x->color === RBNode::COLOR_BLACK ) && ( $root !== $x ) )
+        {
+            if ( $x === $x->parent->left )
+            {
+                $w = $x->parent->right;
+                if ( $w->color === RBNode::COLOR_RED )
+                {
+                    $w->color = RBNode::COLOR_BLACK;
+                    $x->parent->color = RBNode::COLOR_RED;
+                    $this->leftRotate( $tree, $x->parent );
+                    $w = $x->parent->right;
+                }
+
+                if ( ( $w->right->color === RBNode::COLOR_BLACK ) &&
+                    ( $w->left->color === RBNode::COLOR_BLACK ) )
+                {
+                    $w->color = RBNode::COLOR_RED;
+                    $x = $x->parent;
+                }
+                else
+                {
+                    if ( $w->right->color === RBNode::COLOR_BLACK )
+                    {
+                        $w->left->color = RBNode::COLOR_BLACK;
+                        $w->color = RBNode::COLOR_RED;
+                        $this->rightRotate( $tree, $w );
+                        $w = $x->parent->right;
+                    }
+                    $w->color = $x->parent->color;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $w->right->color = RBNode::COLOR_BLACK;
+                    $this->leftRotate( $tree, $x->parent );
+                    $x = $root;
+                }
+            }
+            else
+            {
+                $w = $x->parent->left;
+                if ( $w->color === RBNode::COLOR_RED )
+                {
+                    $w->color = RBNode::COLOR_BLACK;
+                    $x->parent->color = RBNode::COLOR_RED;
+                    $this->rightRotate( $tree, $x->parent );
+                    $w = $x->parent->left;
+                }
+
+                if ( ( $w->right->color === RBNode::COLOR_BLACK ) &&
+                    ( $w->left->color === RBNode::COLOR_BLACK ) )
+                {
+                    $w->color = RBNode::COLOR_RED;
+                    $x = $x->parent;
+                }
+                else
+                {
+                    if ( $w->left->color === RBNode::COLOR_BLACK )
+                    {
+                        $w->right->color = RBNode::COLOR_BLACK;
+                        $w->color = RBNode::COLOR_RED;
+                        $this->leftRotate( $tree, $w );
+                        $w = $x->parent->left;
+                    }
+                    $w->color = $x->parent->color;
+                    $x->parent->color = RBNode::COLOR_BLACK;
+                    $w->left->color = RBNode::COLOR_BLACK;
+                    $this->rightRotate( $tree, $x->parent );
+                    $x = $root;
+                }
+            }
+        }
+        $x->color = RBNode::COLOR_BLACK;
+
+        if ( $this->DEBUG )
+        {
+            assert( $tree->nil->color === RBNode::COLOR_BLACK );
+        }
+    }
+    
+    protected function compare( $key1, $key2 )
+    {
+        if ( !is_scalar( $key1 ) || is_bool( $key1 ) || !is_scalar( $key2 ) || is_bool( $key2 ) )
+            throw new InvalidArgumentException( __METHOD__.'() keys must be a string or numeric' );
+
+        $returnValue = null;
+
+        switch ( true )
+        {
+            case ( is_numeric( $key1 ) && is_numeric( $key2 ) ):
+                if ( $key1 > $key2 )
+                {
+                    $returnValue = 1;
+                }
+                else
+                {
+                    $returnValue = ( $key1 === $key2 ) ? 0 : -1;
+                }
+                return $returnValue;
+
+
+        }
+
+        $returnValue = strcmp( "$key1", "$key2" );
+
+        if ( $returnValue > 0 )
+            return 1;
+
+        if ( $returnValue < 0 )
+            return -1;
+
+        return 0;
     }
 }

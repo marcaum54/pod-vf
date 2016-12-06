@@ -3,6 +3,6 @@
         <input type="file" name="arquivo" id="arquivo">
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Enviar</button>
     </div>
 </form>

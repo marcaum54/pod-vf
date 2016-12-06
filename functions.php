@@ -72,7 +72,10 @@
         if( $tree instanceof BinaryTree)
         {
             foreach( $elements as $element )
-                $tree->insert( $element );
+            {
+                $node = new BinaryNode($element);
+                $tree->insert($node);
+            }
         }
 
         if( $tree instanceof AVLTree )

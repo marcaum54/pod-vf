@@ -14,7 +14,9 @@
     <body>
         <header class="page-header text-center">
             <h1>POD - VF <small>2016.02</small></h1>
-            <a href="controller.php?action=reset" class="btn btn-danger">Resetar</a>
         </header>
 
         <div class="container">
+            <div class="text-center" style="margin-bottom: 40px;">
+                <a href="controller.php?action=reset" class="btn btn-danger"><i class="fa fa-refresh"></i> Reiniciar</a>
+            </div>
