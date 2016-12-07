@@ -54,7 +54,7 @@
         if( $_REQUEST['action'] === 'download' )
         {
             header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename='. uniqid() . '.csv');
+            header('Content-Disposition: attachment; filename=arvore.csv');
 
             $output = fopen('php://output', 'w');
 
